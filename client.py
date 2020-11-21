@@ -124,7 +124,7 @@ pos = [0, 0, 0]; rot = [0, 0]; zoom = 400; vel = 0.1
 fps = 120; maxArea = 1000; porsion = -1; info = ()
 
 w, h = 1000, 1000; cx, cy = w//2, h//2; mX_temp, mY_temp = 0, 0
-pygame.display.set_caption("CGV - Complex Graph Visualizer - 1.1.0")
+pygame.display.set_caption("CGV - Complex Graph Visualizer - 1.1.5")
 monitorInfo = (pygame.display.Info().current_w, pygame.display.Info().current_h)
 screen = pygame.display.set_mode((w, h))
 clock = pygame.time.Clock()

@@ -91,9 +91,9 @@ def plane_test(_, x, y):
 
 # Variables ---------------------------------------------------------------------------------------------------------------------------- #
 
-area = 2
+area = 1.5
 size = 1
-quality = 50
+quality = 30
 porsion = 10
 roundAmount = 2    # To what decimal the numbers will be rounded for the JSON file
 
@@ -102,9 +102,9 @@ roundAmount = 2    # To what decimal the numbers will be rounded for the JSON fi
 g1 = Graph([0, 0], [3, 6, 5], func=make_quadratic, color=(255, 100, 100))
 g2 = Graph([0, 0], [1, 1, 1], func=make_quadratic, showRoots=True, color=(100, 255, 100))
 g3 = Graph([0, 0], [1, 1, 1], func=make_quadratic, color=(100, 100, 255))
-g4 = Graph([0, 0], [0.01, 0.1, 1, 1, 1, 0], func=make_q5, color=(255, 100, 100))
+g4 = Graph([0, 0], [0.01, 0.01, 1, 1, 1, 0], func=make_q5, color=(255, 100, 100))
 g5 = Graph([0, 0], [0, 0], func=plane_test, color=(255, 255, 255))
-g6 = Graph([0, 0], [0.001, 0.01, 1, 1, 1, 1, 0], func=make_q6, color=(100, 100, 255))
+g6 = Graph([-0.4, 0], [0.001, 0.01, 1, 1, 1, 1, 0], func=make_q6, color=(100, 100, 255))
 # print(g1.graph)
 # print(g1.roots)
 # graphs = [g1, g2]
