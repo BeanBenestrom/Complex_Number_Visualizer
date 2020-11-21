@@ -99,7 +99,7 @@ def create_plane(area, pos, values, color):
     area = area + 1
     for y in range(0, area):
         for x in range(0, area):
-            vectorOrigins.append(pos[area*y+x]); vectors.append([pos[area*y+x][0]*50, -values[area*y+x][0], values[area*y+x][1]])
+            vectorOrigins.append(pos[area*y+x]); vectors.append([pos[area*y+x][0], -values[area*y+x][0], values[area*y+x][1]])
             if area*y+x-1 >= 0 and (area*y+x) % area != 0:
                 edges.append((area*y+x, area*y+x-1))
             if area*y+x-area >= 0:
@@ -108,7 +108,7 @@ def create_plane(area, pos, values, color):
 
 
 def start():  
-    global objs, fps
+    global objs, fps, porsion
     threading.Thread(target=rotate_error_cube).start()
     while run:
         clock.tick(fps)
@@ -123,6 +123,7 @@ def start():
                         )
                     else:
                         temp_objs.append((1, errorCube.vectors, errorCube.edges, True, True, errorCube.color))
+                porsion = jsonFile[-1]["porsion"]
                 objs = temp_objs
         except:
             objs = [(1, errorCube.vectors, errorCube.edges, True, True, errorCube.color)]
@@ -133,19 +134,19 @@ def stop():
 
 
 def get_info():
-    return objs
+    return [objs, porsion]
 
 
 # Variables -------------------------------------------------------------------------------------------------------------------------- #
 
 clock = pygame.time.Clock()
-fps = 60; run = True
+fps = 60; run = True; porsion = -1
 
 # Cube
 cubeVectors = np.array([[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]])
 cubeEdges = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)]
 
-errorCube = Object([0, 0, 0], cubeVectors*500, cubeEdges, useEdges=True, color=(255, 0, 0))
+errorCube = Object([0, 0, 0], cubeVectors, cubeEdges, useEdges=True, color=(255, 0, 0))
 
 # Dots
 dots = [[0, 0, 0, (255, 255, 0)]]

@@ -34,7 +34,7 @@ def move(key):
     global pos, vel, rot
     dirPos = np.array([0., 0., 0.])
     temp_vel = vel
-    if key[pygame.K_LSHIFT]: temp_vel *= 2
+    if key[pygame.K_LSHIFT]: temp_vel *= 5
     if key[pygame.K_w]: dirPos += rotateXZ(rotateYZ([0, 0, temp_vel], -1), -1)
     if key[pygame.K_a]: dirPos += rotateXZ([-temp_vel, 0, 0], -1)
     if key[pygame.K_s]: dirPos += rotateXZ(rotateYZ([0, 0, -temp_vel], -1), -1)
@@ -77,8 +77,12 @@ def render():
         v = []
         for x, y, z in i[1]:
             dot = draw_dot(x, y, z) 
-            v.append(dot)
-            if i[3] and i[5] and dot[0]: pygame.draw.circle(screen, i[5], dot, 3)
+            if porsion < 0 or -porsion <= z <= porsion:
+                v.append(dot)
+                if i[3] and i[5] and dot[0]: 
+                    pygame.draw.circle(screen, i[5], dot, 3)
+            else:
+                v.append((None, None))
         if i[4]: 
             for e1, e2 in i[2]:
                 # print (v[e1], v[e2])
@@ -115,12 +119,12 @@ while True:
 
 # Variables ------------------------------------------------------------------------------------------------------------------------- #
 #                                     240
-pos = [0, 0, 0]; rot = [0, 0]; zoom = 400; vel = 50
+pos = [0, 0, 0]; rot = [0, 0]; zoom = 400; vel = 0.1
 
-fps = 120; maxArea = 1000; info = ()
+fps = 120; maxArea = 1000; porsion = -1; info = ()
 
 w, h = 1000, 1000; cx, cy = w//2, h//2; mX_temp, mY_temp = 0, 0
-pygame.display.set_caption("CGV - Complex Graph Visualizer - 1.0.0")
+pygame.display.set_caption("CGV - Complex Graph Visualizer - 1.1.0")
 monitorInfo = (pygame.display.Info().current_w, pygame.display.Info().current_h)
 screen = pygame.display.set_mode((w, h))
 clock = pygame.time.Clock()
@@ -170,5 +174,5 @@ while True:
     # if pygame.time.get_ticks() - delay > 300:
     #     delay = pygame.time.get_ticks(); print(rot)
 
-    if option == 0: info = engine.get_info()
+    if option == 0: info, porsion = engine.get_info()
     rotate(mX, mY); move(key); render()

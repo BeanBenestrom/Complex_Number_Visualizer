@@ -55,9 +55,34 @@ def get_color(positions):
 
 # Graph equations ---------------------------------------------------------------------------------------------------------------------- #
 
+def make_q6(var, x, y):
+    # print(var)
+    return  complex(var[6]) * complex(x, y)**6 + complex(var[5]) * complex(x, y)**5 + complex(var[4]) * complex(x, y)**4 + complex(var[3]) * complex(x, y)**3 + complex(var[2]) * complex(x, y)**2 + complex(var[1]) * complex(x, y) + complex(var[0])
+
+
+def make_q5(var, x, y):
+    # print(var)
+    return  complex(var[5]) * complex(x, y)**5 + complex(var[4]) * complex(x, y)**4 + complex(var[3]) * complex(x, y)**3 + complex(var[2]) * complex(x, y)**2 + complex(var[1]) * complex(x, y) + complex(var[0])
+
+
+def make_q4(var, x, y):
+    # print(var)
+    return  complex(var[4]) * complex(x, y)**4 + complex(var[3]) * complex(x, y)**3 + complex(var[2]) * complex(x, y)**2 + complex(var[1]) * complex(x, y) + complex(var[0])
+
+
+def make_qubic(var, x, y):
+    # print(var)
+    return  complex(var[3]) * complex(x, y)**3 + complex(var[2]) * complex(x, y)**2 + complex(var[1]) * complex(x, y) + complex(var[0])
+
+
 def make_quadratic(var, x, y):
     # print(var)
-    return complex(var[2]) * complex(x, y) * complex(x, y) + complex(var[1]) * complex(x, y) + complex(var[0])
+    return  complex(var[2]) * complex(x, y)**2 + complex(var[1]) * complex(x, y) + complex(var[0])
+
+
+def make_q1(var, x, y):
+    # print(var)
+    return complex(var[1]) * complex(x, y) + complex(var[0])
 
 
 def plane_test(_, x, y):
@@ -66,21 +91,24 @@ def plane_test(_, x, y):
 
 # Variables ---------------------------------------------------------------------------------------------------------------------------- #
 
-area = 80
+area = 2
 size = 1
-quality = 30
-porsion = 1         # From 0 to 1  -  0 would only show the real numbers
+quality = 50
+porsion = 10
 roundAmount = 2    # To what decimal the numbers will be rounded for the JSON file
 
 # Graph -------------------------------------------------------------------------------------------------------------------------------- #
 
 g1 = Graph([0, 0], [3, 6, 5], func=make_quadratic, color=(255, 100, 100))
-g2 = Graph([0, -10], [1, 10, 1], func=make_quadratic, showRoots=True, color=(100, 255, 100))
+g2 = Graph([0, 0], [1, 1, 1], func=make_quadratic, showRoots=True, color=(100, 255, 100))
 g3 = Graph([0, 0], [1, 1, 1], func=make_quadratic, color=(100, 100, 255))
+g4 = Graph([0, 0], [0.01, 0.1, 1, 1, 1, 0], func=make_q5, color=(255, 100, 100))
+g5 = Graph([0, 0], [0, 0], func=plane_test, color=(255, 255, 255))
+g6 = Graph([0, 0], [0.001, 0.01, 1, 1, 1, 1, 0], func=make_q6, color=(100, 100, 255))
 # print(g1.graph)
 # print(g1.roots)
 # graphs = [g1, g2]
-graphs = [g2, g3]
+graphs = [g4]
 
 
 # JSON -------------------------------------------------------------------------------------------------------------------------------- #
@@ -102,7 +130,7 @@ for i in graphs:
             "color" : i.color
         }
     )
-json_text.append({"size" : size, "vectors" : quality})
+json_text.append({"size" : size, "vectors" : quality, "porsion" : porsion})
 
 with open("graph_info.json", "w") as f:
     json.dump(json_text, f)
