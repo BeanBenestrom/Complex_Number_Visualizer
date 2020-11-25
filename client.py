@@ -1,4 +1,4 @@
-import pygame, sys, os, socket, threading
+import pygame, sys, os, socket, threading, json
 import colorama as color
 import numpy as np
 import server, engine
@@ -20,7 +20,93 @@ yellow = color.Fore.LIGHTYELLOW_EX
 
 # Socket functions -------------------------------------------------------------------------------------------------------------------- #
 
-# pass
+def add_ip_port():
+    while True:
+        _ip = input("ip>")
+        _port = input("port>")
+        if ip == "": 
+            print("IP cannot be blank\n")
+        else:
+            try:
+                port = int(port)
+                if 0 <= port <= 65535:
+                    print(f"\n---IP:    {ip}")
+                    print(f"---PORT:  {port}\n")
+                    break
+                else:
+                    print("Port must be between 0-65535\n")
+            except ValueError:
+                print("Port should only be a number\n")
+    return _ip, _port
+
+
+def connect_to_server(_ip, _port):
+    global socketCon, tries, maxTries
+    try:
+        socketCon = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socketCon.connect((_ip, _port))
+        return True
+    except:
+        tries += 1
+        if tries >= maxTries:
+            tries = 0
+            print(redL + f"\nERROR: Could not connect to server after {maxTries} tries!" + white)
+            print("\nPossibly the IP or the port is wrong.\n" + white)
+            return False
+        print(red + f"ERROR: Could not connect to server!\n       Retrying...({tries})" + white)
+        time.sleep(0.5)
+        create_socket()
+
+
+def server_options():
+    global option, ip, port
+    while True:
+        try:
+            with open("options.json") as f:
+                if f[0]["ip"] != "" and f[0]["port"] != 0:
+                    ip, port = f[0]["ip"], f[0]["port"]
+                print(f"USED IP, PORT: {ip, port}\n1 - Join Server\n2 - Create Server\n3 - Change ip/port\n4 - Back\n") 
+                option = int(input(">"))
+
+                # Join server
+                if option == 1:
+                    _ip, _port = add_ip_port()
+                    if connect_to_server(_ip, _port): 
+                        return True
+
+                # Create server
+                elif option == 2:
+                    if server.create_socket(ip, port):
+                        if connect_to_server(ip, port):
+                            threading.Thread(target=server.start).start()
+                            return True
+
+                # Change ip and port
+                elif option == 3:
+                    _ip, _port = add_ip_port()
+                    with open("options.json", "w") as f:
+                        json.dump([{"ip" : _ip, "port" : _port}], f)
+                else:
+                    print("Please type one of the options")
+        except ValueError: 
+            print("Please type a number\n")
+        except: 
+            # Check if .json exsists
+            print(redL + "ERROR: Error while loading options.json. Make sure options.json is not corrupted" + white)
+            return False
+
+
+def new_info():
+    global info, porsion, loaded, bufferSize, headerSize
+    while True:
+        length = int(socketCon.recv(headerSize))
+        data = bytes("", "utf-8")
+        while length > 0:
+            data += socketCon.recv(bufferSize); length -= bufferSize
+        d = pickle.loads(data)
+        if d[0]: info, porsion = d[1]
+        else: print(colors.get(d[2]) + d[1] + white)    
+        loaded = True
 
 
 # User functions ---------------------------------------------------------------------------------------------------------------------- #
@@ -99,18 +185,9 @@ while True:
         option = int(input(">")) - 1
 
         if option == 0:
-            threading.Thread(target=engine.start).start()
-            break
+            threading.Thread(target=engine.start).start(); break
         elif option == 1:
-            print("\n1 - Join Server\n2 - Create Server\nAnything else - Back\n") 
-            option = int(input(">"))
-
-            if option == 1: 
-                # Join server
-                break
-            elif option == 2:
-                # Create server
-                break
+            if server_options(): break
         else:
             print("Choose 1 or 2\n")
     except ValueError: 
@@ -121,10 +198,15 @@ while True:
 #                                     240
 pos = [0, 0, 0]; rot = [0, 0]; zoom = 400; vel = 0.1
 
-fps = 120; maxArea = 1000; porsion = -1; info = ()
+ip, port = socket.gethostbyname(socket.gethostname()), 55555
+maxTries = 3
+headerSize = 7
+bufferSize = 32
 
-w, h = 1000, 1000; cx, cy = w//2, h//2; mX_temp, mY_temp = 0, 0
-pygame.display.set_caption("CGV - Complex Graph Visualizer - 1.1.5")
+w, h = 1000, 1000; fps = 120; maxArea = 1000; porsion = -1
+
+cx, cy = w//2, h//2; mX_temp, mY_temp = 0, 0; tries = 0; loaded = True; info = ()
+pygame.display.set_caption("CGV - Complex Graph Visualizer - 1.2.5")
 monitorInfo = (pygame.display.Info().current_w, pygame.display.Info().current_h)
 screen = pygame.display.set_mode((w, h))
 clock = pygame.time.Clock()
@@ -144,6 +226,7 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
+            if option == 2: server.stop()
             if option == 0: engine.stop()
             sys.exit()
 
@@ -160,7 +243,8 @@ while True:
 
     if key[pygame.K_ESCAPE]:
         pygame.quit()
-        if option == 0: engine.stop()
+        if option == 2: server.stop()
+        if option == 0: engine.stop()  
         sys.exit() 
 
     mX, mY = 0, 0
@@ -175,4 +259,8 @@ while True:
     #     delay = pygame.time.get_ticks(); print(rot)
 
     if option == 0: info, porsion = engine.get_info()
+    elif loaded:
+        loaded = False
+        d = pickle.dumps([pos, rot])
+        serverC.send(bytes(f"{len(d):<{headerSize}}", "utf-8") + d)
     rotate(mX, mY); move(key); render()

@@ -1,4 +1,4 @@
-import numpy, json
+import numpy, json, time
 from math import *
 
 
@@ -9,6 +9,7 @@ class Graph:
         self.pos = pos; self.roots = None; variables.reverse()
         self.variables = variables
         self.color = color
+        self.func = func
         if not func: func = make_quadratic
         if showRoots and func == make_quadratic:
             i = pow(-(variables[1]/variables[2])/2, 2) - variables[0]/variables[2]
@@ -89,48 +90,85 @@ def plane_test(_, x, y):
     return complex(0, y)
 
 
+def sin_func(_, x, y):
+    return complex(sin(x), y)
+
+
+def cos_func(_, x, y):
+    return complex(cos(x), y)
+
+
+# Graph equations ---------------------------------------------------------------------------------------------------------------------- #
+
+def circle_movement():
+    global usedLoopGraphs
+    x = -2.5; z = 0; rot = 1/360*2*pi
+    o = [0, 1]
+    while True:
+        time.sleep(0.01)
+        x = x*cos(rot) - z*sin(rot)
+        z = x*sin(rot) + z*cos(rot)
+        for i in usedLoopGraphs:
+            i.pos[0] = o[0] + x; i.pos[1] = o[1] + z
+            i.graph = make_graph(i, i.func)
+        save_json()   
+
+
 # Variables ---------------------------------------------------------------------------------------------------------------------------- #
 
-area = 1.5
+area = 2
 size = 1
 quality = 30
-porsion = 10
-roundAmount = 2    # To what decimal the numbers will be rounded for the JSON file
+porsion = 100
+roundAmount = 2   # To what decimal the numbers will be rounded for the JSON file
+useErrorCube = True
 
 # Graph -------------------------------------------------------------------------------------------------------------------------------- #
 
 g1 = Graph([0, 0], [3, 6, 5], func=make_quadratic, color=(255, 100, 100))
-g2 = Graph([0, 0], [1, 1, 1], func=make_quadratic, showRoots=True, color=(100, 255, 100))
+g2 = Graph([0, 0], [1, 0, 1], func=make_quadratic, showRoots=True, color=(100, 255, 100))
 g3 = Graph([0, 0], [1, 1, 1], func=make_quadratic, color=(100, 100, 255))
-g4 = Graph([0, 0], [0.01, 0.01, 1, 1, 1, 0], func=make_q5, color=(255, 100, 100))
+g4 = Graph([-0.2, 0], [1, 1, 1, 1, 1, 1], func=make_q5, color=(255, 100, 100))
 g5 = Graph([0, 0], [0, 0], func=plane_test, color=(255, 255, 255))
 g6 = Graph([-0.4, 0], [0.001, 0.01, 1, 1, 1, 1, 0], func=make_q6, color=(100, 100, 255))
+gSin = Graph([0, 0], [], func=sin_func, color=(200, 200, 255))
+gCos = Graph([0, 0], [], func=cos_func, color=(200, 255, 200))
 # print(g1.graph)
 # print(g1.roots)
 # graphs = [g1, g2]
-graphs = [g4]
+graphs = [g5, g2]
+usedLoopGraphs = [g5, g2]
 
 
 # JSON -------------------------------------------------------------------------------------------------------------------------------- #
 
-# test = [
-#     [[[0], [0]], [[0], [0]]], 
-#     [[[1], [1]], [[3], [3]]], 
-#     [[[4], [4]], [[5], [5]]]
-# ]
+def save_json():
+    # test = [
+    #     [[[0], [0]], [[0], [0]]], 
+    #     [[[1], [1]], [[3], [3]]], 
+    #     [[[4], [4]], [[5], [5]]]
+    # ]
 
-json_text = []
-for i in graphs:
-#                  {"pos" : [[1, 2], [5, 2]], "values" : [[2, 2], [1, 2]]}
-    # print(i.graph[1])
-    json_text.append(
-        {
-            "pos" : [(round(x, roundAmount), round(y, roundAmount)) for x, y in i.graph[0].tolist()], 
-            "values" : [(round(num.real, roundAmount), round(num.imag, roundAmount)) for num in i.graph[1]],
-            "color" : i.color
-        }
-    )
-json_text.append({"size" : size, "vectors" : quality, "porsion" : porsion})
+    json_text = []
+    for i in graphs:
+    #                  {"pos" : [[1, 2], [5, 2]], "values" : [[2, 2], [1, 2]]}
+        # print(i.graph[1])
+        json_text.append(
+            {
+                "pos" : [(round(x, roundAmount), round(y, roundAmount)) for x, y in i.graph[0].tolist()], 
+                "values" : [(round(num.real, roundAmount), round(num.imag, roundAmount)) for num in i.graph[1]],
+                "color" : i.color
+            }
+        )
+    json_text.append({"size" : size, "vectors" : quality, "porsion" : porsion, "errorCube" : useErrorCube})
 
-with open("graph_info.json", "w") as f:
-    json.dump(json_text, f)
+    with open("graph_info.json", "w") as f:
+        json.dump(json_text, f)
+
+
+def loop():
+    circle_movement()   
+
+
+save_json()
+loop()

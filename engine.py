@@ -1,7 +1,7 @@
 # import numpy
 
 
-import pygame, sys, time, threading, random, json
+import pygame, sys, time, threading, random, json, server
 import numpy as np
 from math import *
 
@@ -69,15 +69,18 @@ def rotateXY(_vector, rot, rev=1):
 # User functions --------------------------------------------------------------------------------------------------------------------- #
 
 def add_cam(user):
+    global cams
     cams.append(Cam(user))
 
 
 def remove_cam(user):
+    global cams
     for cam in cams:
         if cam.user == user: cams.remove(cam)
 
 
 def update_user_info(user, pos, rot):
+    global cams
     for cam in cams:
         if cam.user == user: 
             cam.pos = pos; cam.rot = rot; break
@@ -113,20 +116,22 @@ def start():
     while run:
         clock.tick(fps)
         temp_objs = []
+        useErrorCube = False
         try:
             with open("graph_info.json") as i:
                 jsonFile = json.load(i)
+                useErrorCube = jsonFile[-1]["errorCube"]
                 for i in range(0, len(jsonFile)-1):
                     if jsonFile[-1]["vectors"] and jsonFile[i]["color"] and len(jsonFile[i]["pos"]) == len(jsonFile[i]["values"]):
                         temp_objs.append(
                             create_plane(jsonFile[-1]["vectors"], jsonFile[i]["pos"], jsonFile[i]["values"], jsonFile[i]["color"])
                         )
                     else:
-                        temp_objs.append((1, errorCube.vectors, errorCube.edges, True, True, errorCube.color))
+                        if useErrorCube: temp_objs.append((1, errorCube.vectors, errorCube.edges, True, True, errorCube.color))
                 porsion = jsonFile[-1]["porsion"]
                 objs = temp_objs
         except:
-            objs = [(1, errorCube.vectors, errorCube.edges, True, True, errorCube.color)]
+            if useErrorCube: objs = [(1, errorCube.vectors, errorCube.edges, True, True, errorCube.color)]
 
 def stop():
     global run
@@ -134,6 +139,7 @@ def stop():
 
 
 def get_info():
+    server.update_info([objs, porsion])
     return [objs, porsion]
 
 
