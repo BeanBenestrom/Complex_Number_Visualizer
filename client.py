@@ -1,4 +1,4 @@
-import pygame, sys, os, socket, threading, json
+import pygame, sys, os, socket, threading, json, pickle
 import colorama as color
 import numpy as np
 import server, engine
@@ -8,6 +8,16 @@ from math import *
 pygame.init()
 color.init()
 
+# Variables ------------------------------------------------------------------------------------------------------------------------- #
+#                                     240
+pos = [0, 0, 0]; rot = [0, 0]; zoom = 400; vel = 0.1
+
+w, h = 1000, 1000; fps = 120; maxArea = 1000; porsion = -1
+
+ip, port = socket.gethostbyname(socket.gethostname()), 55555
+maxTries = 3
+headerSize = 7
+bufferSize = 5000
 
 # Colors ------------------------------------------------------------------------------------------------------------------------------ #
 
@@ -17,6 +27,20 @@ red = color.Fore.RED
 redL = color.Fore.LIGHTRED_EX
 yellow = color.Fore.LIGHTYELLOW_EX
 
+colors = {
+    "white" : color.Fore.WHITE,
+    "green" : color.Fore.GREEN,
+    "greenL" : color.Fore.LIGHTGREEN_EX,
+    "yellowL" : color.Fore.LIGHTYELLOW_EX,
+    "red" : color.Fore.RED,
+    "redL" : color.Fore.LIGHTRED_EX,
+    "cyan" : color.Fore.CYAN,
+    "blue" : color.Fore.BLUE,
+    "blueL" : color.Fore.LIGHTBLUE_EX,
+    "magenta" : color.Fore.MAGENTA,
+    "magentaL" : color.Fore.LIGHTMAGENTA_EX,
+}
+
 
 # Socket functions -------------------------------------------------------------------------------------------------------------------- #
 
@@ -24,12 +48,12 @@ def add_ip_port():
     while True:
         _ip = input("ip>")
         _port = input("port>")
-        if ip == "": 
+        if _ip == "": 
             print("IP cannot be blank\n")
         else:
             try:
-                port = int(port)
-                if 0 <= port <= 65535:
+                _port = int(_port)
+                if 0 <= _port <= 65535:
                     print(f"\n---IP:    {ip}")
                     print(f"---PORT:  {port}\n")
                     break
@@ -45,6 +69,7 @@ def connect_to_server(_ip, _port):
     try:
         socketCon = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         socketCon.connect((_ip, _port))
+        threading.Thread(target=new_info).start()
         return True
     except:
         tries += 1
@@ -63,9 +88,10 @@ def server_options():
     while True:
         try:
             with open("options.json") as f:
-                if f[0]["ip"] != "" and f[0]["port"] != 0:
-                    ip, port = f[0]["ip"], f[0]["port"]
-                print(f"USED IP, PORT: {ip, port}\n1 - Join Server\n2 - Create Server\n3 - Change ip/port\n4 - Back\n") 
+                ff = json.load(f)
+                if ff[0]["ip"] != "" and ff[0]["port"] != 0:
+                    ip, port = ff[0]["ip"], ff[0]["port"]
+                print(f"USED IP, PORT: {ip, port}\n1 - Join Server\n2 - Create Server\n3 - Change ip/port\n4 - Back\n")
                 option = int(input(">"))
 
                 # Join server
@@ -86,20 +112,19 @@ def server_options():
                     _ip, _port = add_ip_port()
                     with open("options.json", "w") as f:
                         json.dump([{"ip" : _ip, "port" : _port}], f)
+                elif option == 4:
+                    return False
                 else:
                     print("Please type one of the options")
         except ValueError: 
             print("Please type a number\n")
-        except: 
-            # Check if .json exsists
-            print(redL + "ERROR: Error while loading options.json. Make sure options.json is not corrupted" + white)
-            return False
 
 
 def new_info():
     global info, porsion, loaded, bufferSize, headerSize
     while True:
         length = int(socketCon.recv(headerSize))
+        print(length)
         data = bytes("", "utf-8")
         while length > 0:
             data += socketCon.recv(bufferSize); length -= bufferSize
@@ -121,6 +146,7 @@ def move(key):
     dirPos = np.array([0., 0., 0.])
     temp_vel = vel
     if key[pygame.K_LSHIFT]: temp_vel *= 5
+    if key[pygame.K_LCTRL]: temp_vel /= 5
     if key[pygame.K_w]: dirPos += rotateXZ(rotateYZ([0, 0, temp_vel], -1), -1)
     if key[pygame.K_a]: dirPos += rotateXZ([-temp_vel, 0, 0], -1)
     if key[pygame.K_s]: dirPos += rotateXZ(rotateYZ([0, 0, -temp_vel], -1), -1)
@@ -194,19 +220,10 @@ while True:
         print("Answer with a number\n")
 
 
-# Variables ------------------------------------------------------------------------------------------------------------------------- #
-#                                     240
-pos = [0, 0, 0]; rot = [0, 0]; zoom = 400; vel = 0.1
-
-ip, port = socket.gethostbyname(socket.gethostname()), 55555
-maxTries = 3
-headerSize = 7
-bufferSize = 32
-
-w, h = 1000, 1000; fps = 120; maxArea = 1000; porsion = -1
+# More variables -------------------------------------------------------------------------------------------------------------------- #
 
 cx, cy = w//2, h//2; mX_temp, mY_temp = 0, 0; tries = 0; loaded = True; info = ()
-pygame.display.set_caption("CGV - Complex Graph Visualizer - 1.2.5")
+pygame.display.set_caption("CGV - Complex Graph Visualizer - 2.0.0")
 monitorInfo = (pygame.display.Info().current_w, pygame.display.Info().current_h)
 screen = pygame.display.set_mode((w, h))
 clock = pygame.time.Clock()
@@ -262,5 +279,5 @@ while True:
     elif loaded:
         loaded = False
         d = pickle.dumps([pos, rot])
-        serverC.send(bytes(f"{len(d):<{headerSize}}", "utf-8") + d)
+        socketCon.send(bytes(f"{len(d):<{headerSize}}", "utf-8") + d)
     rotate(mX, mY); move(key); render()

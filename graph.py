@@ -109,18 +109,18 @@ def circle_movement():
         x = x*cos(rot) - z*sin(rot)
         z = x*sin(rot) + z*cos(rot)
         for i in usedLoopGraphs:
-            i.pos[0] = o[0] + x; i.pos[1] = o[1] + z
+            i.pos[0] = o[0] + x
             i.graph = make_graph(i, i.func)
         save_json()   
 
 
 # Variables ---------------------------------------------------------------------------------------------------------------------------- #
 
-area = 2
+area = 0.8
 size = 1
-quality = 30
-porsion = 100
-roundAmount = 2   # To what decimal the numbers will be rounded for the JSON file
+quality = 15
+porsion = 10
+roundAmount = 3   # To what decimal the numbers will be rounded for the JSON file
 useErrorCube = True
 
 # Graph -------------------------------------------------------------------------------------------------------------------------------- #
@@ -136,8 +136,8 @@ gCos = Graph([0, 0], [], func=cos_func, color=(200, 255, 200))
 # print(g1.graph)
 # print(g1.roots)
 # graphs = [g1, g2]
-graphs = [g5, g2]
-usedLoopGraphs = [g5, g2]
+graphs = [g2]
+usedLoopGraphs = [g2]
 
 
 # JSON -------------------------------------------------------------------------------------------------------------------------------- #

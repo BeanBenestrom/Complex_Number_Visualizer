@@ -139,7 +139,6 @@ def stop():
 
 
 def get_info():
-    server.update_info([objs, porsion])
     return [objs, porsion]
 
 

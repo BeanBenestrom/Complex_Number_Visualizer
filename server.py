@@ -1,4 +1,4 @@
-import socket, sys, engine
+import socket, sys, time, pickle, threading, engine
 import colorama as color
 
 
@@ -17,7 +17,7 @@ headerSize = 7
 bufferSize = 32
 
 run = True; tries = 0; user_amount = 0; maxheaderSize = pow(10, headerSize-2) #100,000  10*10*10*10*10
-users = []; info = ()
+users = []
 
 
 def create_socket(_ip, _port):
@@ -37,7 +37,7 @@ def create_socket(_ip, _port):
             return False
         print(redL + f"ERROR: Server could not be created!\n       Retrying...({tries})" + white)
         time.sleep(0.5)
-        create_server() 
+        create_socket(_ip, _port) 
 
 
 def remove_user(conn, address):
@@ -45,11 +45,11 @@ def remove_user(conn, address):
     for user in users:
         if user == [conn, address]:
             users.remove(user)
-            main.remove_cam(address)
+            engine.remove_cam(address)
             print(yellowL + f"\n{address} removed!" + white)
             conn.close()
             user_amount -= 1
-            for user in Users:
+            for user in users:
                 sendMessage(user[0], user[1], f"User {address[0]} disconnected!", "yellowL")
 
 
@@ -64,28 +64,23 @@ def sendMessage(conn, address, msg, colorIndex):
 
 
 def sendInfo(conn, address): 
-    global headerSize, bufferSize
+    global headerSize, bufferSize, info
     while run:    
         try:
             length = int(conn.recv(headerSize))
-            if length > maxheaderSize: 
+            if length > maxheaderSize:
                 print(red + "\nERROR: User, we are receiving data from, has given a faulty data size." + white); remove_user(conn, address)
             data = bytes("", "utf-8")
             while length > 0:
                 data += conn.recv(bufferSize); length -= bufferSize
             pos, rot = pickle.loads(data)
-            engine.update_user_info(user, pos, rot)
-            d = pickle.dumps([True, info])
+            engine.update_user_info(address, pos, rot)
+            d = pickle.dumps([True, engine.get_info()])
             conn.send(bytes(f"{len(d):<{headerSize}}", "utf-8") + d)
         except:
             print(red + "\nERROR: User, we are receiving data from, does not exsist, or is giving faulty data." + white)
             remove_user(conn, address)
             return 
-
-
-def update_info(_info):
-    global info
-    info = _info      
 
 
 def start():

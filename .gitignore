@@ -2,3 +2,5 @@
 /OLD
 /test.py
 /__pycache__
+/venv
+/options.json
