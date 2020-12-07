@@ -110,6 +110,15 @@ def create_plane(area, pos, values, color):
     return (0, vectors, edges, False, True, color, vectorOrigins)
 
 
+# def create_line(line):
+#     #      (0, vectors, False, True, color)
+#     return (1, (line[0], line[1]), False, True, color)
+
+
+# def create_dot(dot):
+#     return (0, vectors, True, color)
+
+
 def start():  
     global objs, fps, porsion
     threading.Thread(target=rotate_error_cube).start()
@@ -121,17 +130,21 @@ def start():
             with open("graph_info.json") as i:
                 jsonFile = json.load(i)
                 useErrorCube = jsonFile[-1]["errorCube"]
-                for i in range(0, len(jsonFile)-1):
-                    if jsonFile[-1]["vectors"] and jsonFile[i]["color"] and len(jsonFile[i]["pos"]) == len(jsonFile[i]["values"]):
+                for i in range(0, len(jsonFile[0])):
+                    if jsonFile[-1]["vectors"] and jsonFile[0][i]["color"] and len(jsonFile[0][i]["pos"]) == len(jsonFile[0][i]["values"]):
                         temp_objs.append(
-                            create_plane(jsonFile[-1]["vectors"], jsonFile[i]["pos"], jsonFile[i]["values"], jsonFile[i]["color"])
+                            create_plane(jsonFile[-1]["vectors"], jsonFile[0][i]["pos"], jsonFile[0][i]["values"], jsonFile[0][i]["color"])
                         )
                     else:
-                        if useErrorCube: temp_objs.append((1, errorCube.vectors, errorCube.edges, True, True, errorCube.color))
+                        if useErrorCube: temp_objs.append((0, errorCube.vectors, errorCube.edges, True, True, errorCube.color))
+                for i in jsonFile[1]:
+                    temp_objs.append((1, i))
+                for i in jsonFile[2]:
+                    temp_objs.append((2, i))
                 porsion = jsonFile[-1]["porsion"]
                 objs = temp_objs
         except:
-            if useErrorCube: objs = [(1, errorCube.vectors, errorCube.edges, True, True, errorCube.color)]
+            if useErrorCube: objs = [(0, errorCube.vectors, errorCube.edges, True, True, errorCube.color)]
 
 def stop():
     global run

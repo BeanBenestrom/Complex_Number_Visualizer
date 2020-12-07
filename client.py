@@ -12,7 +12,7 @@ color.init()
 #                                     240
 pos = [0, 0, 0]; rot = [0, 0]; zoom = 400; vel = 0.1
 
-w, h = 1000, 1000; fps = 120; maxArea = 1000; porsion = -1
+w, h = 1000, 1000; fps = 120; maxArea = 1000; porsion = -1; gridArea = 21
 
 ip, port = socket.gethostbyname(socket.gethostname()), 55555
 maxTries = 3
@@ -171,6 +171,22 @@ def rotateYZ(_vector, rev=1):
 
 # Functions -------------------------------------------------------------------------------------------------------------------------- #
 
+def create_plane(area):
+    vectors = []; edges = []
+    for y in range(0, area):
+        for x in range(0, area):
+            vectors.append([x-area//2, 0, y-area//2])
+            if area*y+x-1 >= 0 and (area*y+x) % area != 0 and y-area//2 != 0:
+                edges.append((area*y+x, area*y+x-1, (55, 55, 55)))
+            elif area*y+x-1 >= 0 and (area*y+x) % area != 0:
+                edges.append((area*y+x, area*y+x-1, (255, 0, 0)))
+            if area*y+x-area >= 0 and x-area//2 != 0:
+                edges.append((area*y+x, area*y+x-area, (55, 55, 55)))
+            elif area*y+x-area >= 0:
+                edges.append((area*y+x, area*y+x-area, (0, 0, 255)))
+    return (vectors, edges)
+
+
 def draw_dot(x, y, z):
     global pos, zoom, rot
     x -= pos[0]; y -= pos[1]; z -= pos[2]
@@ -185,20 +201,52 @@ def draw_dot(x, y, z):
 
 def render():
     screen.fill((0, 0, 0))
+    v = []
+    for x, y, z in grid[0]:
+        dot = draw_dot(x, y, z); v.append(dot)
+    for e1, e2, c in grid[1]:
+        if v[e1][0] and v[e2][0]: pygame.draw.line(screen, c, v[e1], v[e2], 1)
+    # dot = draw_dot(0, 0, 0)
+    # if dot[0]: pygame.draw.circle(screen, (255, 255, 0), dot, 3)
+    
+    # _x1, _x2 = draw_dot(-gridArea//2+1, 0, 0), draw_dot(gridArea//2, 0, 0)
+    # _y1, _y2 = draw_dot(0, -gridArea//2+1, 0), draw_dot(0, gridArea//2, 0)
+    # _z1, _z2 = draw_dot(0, 0, -gridArea//2+1), draw_dot(0, 0, gridArea//2)
+    # if _x1[0] and _x2[0]: pygame.draw.line(screen, (255, 0, 0), _x1, _x2, 1)
+    # if _y1[0] and _y2[0]: pygame.draw.line(screen, (0, 255, 0), _y1, _y2, 1)
+    # if _z1[0] and _z2[0]: pygame.draw.line(screen, (0, 0, 255), _z1, _z2, 1)
+
     for i in info:
         v = []
-        for x, y, z in i[1]:
-            dot = draw_dot(x, y, z) 
-            if porsion < 0 or -porsion <= z <= porsion:
-                v.append(dot)
-                if i[3] and i[5] and dot[0]: 
-                    pygame.draw.circle(screen, i[5], dot, 3)
-            else:
-                v.append((None, None))
-        if i[4]: 
-            for e1, e2 in i[2]:
-                # print (v[e1], v[e2])
-                if i[5] and v[e1][0] and v[e2][0]: pygame.draw.line(screen, i[5], v[e1], v[e2], 1)
+        if i[0] == 0:
+            for x, y, z in i[1]:
+                dot = draw_dot(x, y, z) 
+                if porsion < 0 or -porsion <= z <= porsion:
+                    v.append(dot)
+                    if i[3] and i[5] and dot[0]: 
+                        pygame.draw.circle(screen, i[5], dot, 3)
+                else:
+                    v.append((None, None))
+            if i[4]: 
+                for e1, e2 in i[2]:
+                    # print (v[e1], v[e2])
+                    if i[5] and v[e1][0] and v[e2][0]: pygame.draw.line(screen, i[5], v[e1], v[e2], 1)
+        elif i[0] == 1:
+            i = i[1]
+            # print(i[0])
+            # print(i[1])
+            for x, y, z in (i[0], i[1]):
+                y = -y
+                dot = draw_dot(x, y, z); v.append(dot)
+            # print(i[2], v[0], v[1], i[3])
+            if v[0][0] and v[1][0]: pygame.draw.line(screen, i[2], v[0], v[1], i[3])
+        elif i[0] == 2:
+            i = i[1]
+            # print(i)
+            x, y, z = i[0]
+            y = -y
+            dot = draw_dot(x, y, z)
+            if dot[0]: pygame.draw.circle(screen, i[1], dot, i[2])
 
     pygame.display.update()
 
@@ -223,10 +271,12 @@ while True:
 # More variables -------------------------------------------------------------------------------------------------------------------- #
 
 cx, cy = w//2, h//2; mX_temp, mY_temp = 0, 0; tries = 0; loaded = True; info = ()
-pygame.display.set_caption("CGV - Complex Graph Visualizer - 2.0.0")
+pygame.display.set_caption("CGV - Complex Graph Visualizer - 2.5.0")
 monitorInfo = (pygame.display.Info().current_w, pygame.display.Info().current_h)
 screen = pygame.display.set_mode((w, h))
 clock = pygame.time.Clock()
+
+grid = create_plane(gridArea)
 
 # delay = pygame.time.get_ticks()
 
