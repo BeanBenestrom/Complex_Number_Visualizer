@@ -5,20 +5,21 @@ from functions import *
 from math import *
 
 
+dots = []; lines = []; graphs = []; usedLoopGraphs = []
+
+
 # Classes ----------------------------------------------------------------------------------------------------------------------------- #
 
 class Graph:
     def __init__(self, pos, variables, func=None, showRoots=False, color=None):
-        self.pos = pos; self.roots = None; variables.reverse()
+        self.pos = pos; self.roots = None; self.rootIndex = -1; variables.reverse()
         self.variables = variables
         self.color = color
         self.func = func
         if not func: func = make_quadratic
         if showRoots and func == make_quadratic:
-            i = pow(-(variables[1]/variables[2])/2, 2) - variables[0]/variables[2]
-            if i < 0: i = sqrt(abs(i))
-            else: i = sqrt(i) * 1j
-            self.roots = [complex(-(variables[1]/variables[0])/2, i), complex(-(variables[1]/variables[0])/2, -i)]
+            roots, rootIndex = get_roots(variables, self.rootIndex)
+            
             # print(a * self.roots[0] * self.roots[0] + b * self.roots[0] + c)
             # print(a * self.roots[1] * self.roots[1] + b * self.roots[1] + c)
         # print(variables.reverse())
@@ -26,6 +27,22 @@ class Graph:
 
 
 # Graph functions --------------------------------------------------------------------------------------------------------------------- #
+
+def get_roots(var, index):
+    global dots
+    i = pow(-(var[1]/var[2])/2, 2) - var[0]/var[2]
+    if i < 0: i = sqrt(abs(i))
+    else: i = sqrt(i) * 1j
+    roots = [complex(-(var[1]/var[0])/2, i), complex(-(var[1]/var[0])/2, -i)]
+    print(roots)
+    if index >= 0: 
+        dots[index]([(roots[0].real, 0, roots[0].imag), (255, 255, 0), 5])
+        dots[index+1]([(roots[1].real, 0, roots[1].imag), (255, 255, 0), 5])
+    else:
+        dots.append([(roots[0].real, 0, roots[0].imag), (255, 255, 0), 5])
+        dots.append([(roots[1].real, 0, roots[1].imag), (255, 255, 0), 5])
+    return roots, len(dots)
+
 
 def make_graph(graph, func):
     positions = get_pos(graph)
@@ -68,7 +85,8 @@ def circle_movement():
         x = x*cos(rot) - z*sin(rot)
         z = x*sin(rot) + z*cos(rot)
         for i in usedLoopGraphs:
-            i.pos[0] = o[0] + x
+            #i.pos[0] = o[0] + x
+            i.pos[1] = o[0] + z
             i.graph = make_graph(i, i.func)
         save_json()
 
@@ -162,9 +180,9 @@ def save_json():
 
 # Variables ---------------------------------------------------------------------------------------------------------------------------- #
 
-area = 1
+area = 5
 size = 1
-quality = 50
+quality = 30
 porsion = 100
 roundAmount = 3   # To what decimal the numbers will be rounded for the JSON file
 useErrorCube = True
@@ -172,13 +190,13 @@ useErrorCube = True
 # Graph -------------------------------------------------------------------------------------------------------------------------------- #
 
 #g1 = Graph([0, 0], [3, 6, 5], func=make_quadratic, color=(255, 100, 100))
-#g2 = Graph([0, 0], [1, 0, 1], func=make_quadratic, showRoots=True, color=(100, 255, 100))
+g2 = Graph([0, 0], [1, 0, 1], func=make_quadratic, showRoots=False, color=(100, 255, 100))
 #g3 = Graph([0, 0], [1, 1, 1], func=make_quadratic, color=(100, 100, 255))
-#g4 = Graph([-0.2, 0], [1, 1, 1, 1, 1, 1], func=make_q5, color=(255, 100, 100))
-#g5 = Graph([0, 0], [0, 0], func=plane_test, color=(255, 255, 255))
-#g6 = Graph([-0.4, 0], [0.001, 0.01, 1, 1, 1, 1, 0], func=make_q6, color=(100, 100, 255))
-#gSin = Graph([0, 0], [], func=sin_func, color=(200, 200, 255))
-#gCos = Graph([0, 0], [], func=cos_func, color=(200, 255, 200))
+g4 = Graph([-0.2, 0], [1, 1, 1, 1, 1, 1], func=make_q5, color=(255, 100, 100))
+g5 = Graph([0, 0], [0, 0], func=plane_test, color=(255, 255, 255))
+g6 = Graph([-0.4, 0], [0.001, 0.01, 1, 1, 1, 1, 0], func=make_q6, color=(100, 100, 255))
+gSin = Graph([0, 0], [], func=sin_func, color=(200, 200, 255))
+gCos = Graph([0, 0], [], func=cos_func, color=(200, 255, 200))
 # print(g1.graph)
 # print(g1.roots)
 # graphs = [g1, g2]
@@ -193,15 +211,16 @@ with open("AI.json") as f:
     print(f[2])
     lineAIZ = [(0, 0, 0), (0, 0, f[2][1]), (0, 0, 255), 5]
     lineAIX = [(0, 0, f[2][1]), (f[2][0], 0, f[2][1]), (255, 0, 0), 5]
-    # lg = Graph([2, 0], [[1, 2, 3, 4, 5], [2, 4, 6, 8, 10], 5], func=linear_regression_func, color=(50, 150, 200))
+    lg = Graph([2, 0], [[1, 2, 3, 4, 5], [2, 4, 6, 8, 10], 5], func=linear_regression_func, color=(50, 150, 200))
     lg = Graph([f[2][0], f[2][1]], [f[0], f[1], len(f[0])], func=linear_regression_func, color=(50, 150, 200))
 
-graphs = [lg]
-usedLoopGraphs = []
+graphs.append(gSin); graphs.append(gCos)
+usedLoopGraphs = [gSin, gCos]
 
-lines = [line1, line2, lineAIZ, lineAIX]
-dots = [dot1]
+#lines.append(line1); lines.append(line2); lines.append(lineAIZ); lines.append(lineAIX)
+#dots.append(dot1)
 
 
 save_json()
-AI_derivative_movement(lg, randint(-area*1000, area*1000)/100, randint(-area*1000, area*1000)/100, 0.1)
+circle_movement()
+#AI_derivative_movement(lg, randint(-area*1000, area*1000)/100, randint(-area*1000, area*1000)/100, 0.1)
