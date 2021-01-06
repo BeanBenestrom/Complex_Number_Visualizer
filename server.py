@@ -14,7 +14,7 @@ white = color.Fore.WHITE
 maxTries = 5
 maxSize = 10
 headerSize = 7
-bufferSize = 32
+bufferSize = 500
 
 run = True; tries = 0; user_amount = 0; maxheaderSize = pow(10, headerSize-2) #100,000  10*10*10*10*10
 users = []

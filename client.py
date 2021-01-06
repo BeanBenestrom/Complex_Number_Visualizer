@@ -17,7 +17,7 @@ w, h = 1000, 1000; fps = 120; maxArea = 1000; porsion = -1; gridArea = 21
 ip, port = socket.gethostbyname(socket.gethostname()), 55555
 maxTries = 3
 headerSize = 7
-bufferSize = 5000
+bufferSize = 8000
 
 # Colors ------------------------------------------------------------------------------------------------------------------------------ #
 
@@ -121,15 +121,15 @@ def server_options():
 
 
 def new_info():
-    global info, porsion, loaded, bufferSize, headerSize
+    global info, porsion, cams, loaded, bufferSize, headerSize
     while True:
         length = int(socketCon.recv(headerSize))
-        print(length)
+        # print(length)
         data = bytes("", "utf-8")
         while length > 0:
             data += socketCon.recv(bufferSize); length -= bufferSize
         d = pickle.loads(data)
-        if d[0]: info, porsion = d[1]
+        if d[0]: info, cams, porsion = d[1]
         else: print(colors.get(d[2]) + d[1] + white)    
         loaded = True
 
@@ -191,12 +191,15 @@ def draw_dot(x, y, z):
     global pos, zoom, rot
     x -= pos[0]; y -= pos[1]; z -= pos[2]
 
-    x, y, z = rotateYZ(rotateXZ([x, y, z]))
+    try:
+        x, y, z = rotateYZ(rotateXZ([x, y, z]))
+        x, y = int(zoom/z*x)+cx, int(zoom/z*y)+cy
 
-    if z > 0.001:
-        return (int(zoom/z*x)+cx, int(zoom/z*y)+cy)
-    else:
-        return (None, None)
+        if z > 0.01 and -100000 < x < 100000 and -100000 < y < 100000:
+            return (x, y)
+        else:
+            return (None, None)
+    except: return (None, None)
 
 
 def render():
@@ -229,24 +232,36 @@ def render():
                     v.append((None, None))
             if i[4]: 
                 for e1, e2 in i[2]:
-                    # print (v[e1], v[e2])
+                    #print (v[e1], v[e2])
                     if i[5] and v[e1][0] and v[e2][0]: pygame.draw.line(screen, i[5], v[e1], v[e2], 1)
         elif i[0] == 1:
             i = i[1]
             # print(i[0])
             # print(i[1])
-            for x, y, z in (i[0], i[1]):
-                y = -y
-                dot = draw_dot(x, y, z); v.append(dot)
-            # print(i[2], v[0], v[1], i[3])
-            if v[0][0] and v[1][0]: pygame.draw.line(screen, i[2], v[0], v[1], i[3])
+            try:
+                for x, y, z in (i[0], i[1]):
+                    y = -y
+                    dot = draw_dot(x, y, z); v.append(dot)
+                # print(i[2], v[0], v[1], i[3])
+            except: pass
+            try:
+                if v[0][0] and v[1][0]: pygame.draw.line(screen, i[2], v[0], v[1], i[3])
+            except: pass
         elif i[0] == 2:
             i = i[1]
             # print(i)
-            x, y, z = i[0]
-            y = -y
-            dot = draw_dot(x, y, z)
-            if dot[0]: pygame.draw.circle(screen, i[1], dot, i[2])
+            try:
+                x, y, z = i[0]
+                y = -y
+                dot = draw_dot(x, y, z)
+                if dot[0]: pygame.draw.circle(screen, i[1], dot, i[2])
+            except: pass
+
+    for i in cams:
+        if i.user[0] != socket.gethostbyname(socket.gethostname()):
+            x, y, z = i.pos; dot = draw_dot(x, y, z)
+            if dot[0]: 
+                pygame.draw.circle(screen, i.color, dot, int(sqrt(pow(x - pos[0], 2) + pow(y - pos[1], 2) + pow(z - pos[2], 2))))
 
     pygame.display.update()
 
@@ -270,8 +285,8 @@ while True:
 
 # More variables -------------------------------------------------------------------------------------------------------------------- #
 
-cx, cy = w//2, h//2; mX_temp, mY_temp = 0, 0; tries = 0; loaded = True; info = ()
-pygame.display.set_caption("CGV - Complex Graph Visualizer - 2.5.0")
+cx, cy = w//2, h//2; mX_temp, mY_temp = 0, 0; tries = 0; loaded = True; info = (); cams = ()
+pygame.display.set_caption("CGV - Complex Graph Visualizer - 2.8.0")
 monitorInfo = (pygame.display.Info().current_w, pygame.display.Info().current_h)
 screen = pygame.display.set_mode((w, h))
 clock = pygame.time.Clock()
@@ -279,7 +294,6 @@ clock = pygame.time.Clock()
 grid = create_plane(gridArea)
 
 # delay = pygame.time.get_ticks()
-
 
 # vectors = [[-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1], [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1]]
 # edges = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)]
@@ -325,7 +339,7 @@ while True:
     # if pygame.time.get_ticks() - delay > 300:
     #     delay = pygame.time.get_ticks(); print(rot)
 
-    if option == 0: info, porsion = engine.get_info()
+    if option == 0: info, _, porsion = engine.get_info()
     elif loaded:
         loaded = False
         d = pickle.dumps([pos, rot])
