@@ -263,6 +263,12 @@ def render():
             if dot[0]: 
                 pygame.draw.circle(screen, i.color, dot, int(sqrt(pow(x - pos[0], 2) + pow(y - pos[1], 2) + pow(z - pos[2], 2))))
 
+    for i in cams:
+        if i.user[0] != socket.gethostbyname(socket.gethostname()):
+            x, y, z = i.pos; dot = draw_dot(x, y, z)
+            if dot[0]: 
+                pygame.draw.circle(screen, i.color, dot, int(sqrt(pow(x - pos[0], 2) + pow(y - pos[1], 2) + pow(z - pos[2], 2))))
+
     pygame.display.update()
 
 

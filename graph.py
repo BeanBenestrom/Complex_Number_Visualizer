@@ -351,7 +351,7 @@ with open("AI.json") as f:
     print(f[2])
     lineAIZ = [(0, 0, 0), (0, 0, f[2][1]), (0, 0, 255), 5]
     lineAIX = [(0, 0, f[2][1]), (f[2][0], 0, f[2][1]), (255, 0, 0), 5]
-    # lg = Graph([2, 0], [[1, 2, 3, 4, 5], [2, 4, 6, 8, 10], 5], func=linear_regression_func, color=(50, 150, 200))
+    lg = Graph([2, 0], [[1, 2, 3, 4, 5], [2, 4, 6, 8, 10], 5], func=linear_regression_func, color=(50, 150, 200))
     lg = Graph([f[2][0], f[2][1]], [f[0], f[1], len(f[0])], func=linear_regression_func, color=(50, 150, 200))
 
 # iK = Graph([0, 0], [1, 0, 1], func=inverse_kinematic_regression_func, color=(50, 150, 200))
