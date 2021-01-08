@@ -3,6 +3,7 @@ import colorama as color
 import numpy as np
 import server, engine
 from math import *
+import time
 
 
 pygame.init()
@@ -18,6 +19,8 @@ ip, port = socket.gethostbyname(socket.gethostname()), 55555
 maxTries = 3
 headerSize = 7
 bufferSize = 8000
+
+run = True
 
 # Colors ------------------------------------------------------------------------------------------------------------------------------ #
 
@@ -80,7 +83,7 @@ def connect_to_server(_ip, _port):
             return False
         print(red + f"ERROR: Could not connect to server!\n       Retrying...({tries})" + white)
         time.sleep(0.5)
-        create_socket()
+        connect_to_server(_ip, _port)
 
 
 def server_options():
@@ -122,15 +125,19 @@ def server_options():
 
 def new_info():
     global info, porsion, cams, loaded, bufferSize, headerSize
-    while True:
-        length = int(socketCon.recv(headerSize))
-        # print(length)
+    while run:
+        n = 0
+        while run:
+            try: length = int(socketCon.recv(headerSize)); break
+            except: pass
         data = bytes("", "utf-8")
         while length > 0:
-            data += socketCon.recv(bufferSize); length -= bufferSize
-        d = pickle.loads(data)
-        if d[0]: info, cams, porsion = d[1]
-        else: print(colors.get(d[2]) + d[1] + white)    
+            data += socketCon.recv(bufferSize); length -= bufferSize; n += bufferSize
+        try:
+            d = pickle.loads(data); break
+            if d[0]: info, cams, porsion = d[1]
+            else: print(colors.get(d[2]) + d[1] + white)
+        except: pass
         loaded = True
 
 
@@ -258,16 +265,12 @@ def render():
             except: pass
 
     for i in cams:
-        if i.user[0] != socket.gethostbyname(socket.gethostname()):
+        if i.user[0] != ip:
             x, y, z = i.pos; dot = draw_dot(x, y, z)
             if dot[0]: 
-                pygame.draw.circle(screen, i.color, dot, int(sqrt(pow(x - pos[0], 2) + pow(y - pos[1], 2) + pow(z - pos[2], 2))))
-
-    for i in cams:
-        if i.user[0] != socket.gethostbyname(socket.gethostname()):
-            x, y, z = i.pos; dot = draw_dot(x, y, z)
-            if dot[0]: 
-                pygame.draw.circle(screen, i.color, dot, int(sqrt(pow(x - pos[0], 2) + pow(y - pos[1], 2) + pow(z - pos[2], 2))))
+                r = int(50 - sqrt(pow(x - pos[0], 2) + pow(y - pos[1], 2) + pow(z - pos[2], 2)))
+                if r < 1: r = 1
+                pygame.draw.circle(screen, i.color, dot, r)
 
     pygame.display.update()
 
@@ -305,7 +308,7 @@ grid = create_plane(gridArea)
 # edges = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)]
 
 
-while True:
+while run:
     clock.tick(fps)
     key = pygame.key.get_pressed()
     mouse = pygame.mouse.get_pressed()
@@ -315,6 +318,7 @@ while True:
             pygame.quit()
             if option == 2: server.stop()
             if option == 0: engine.stop()
+            run = False
             sys.exit()
 
         if event.type == pygame.VIDEORESIZE:
@@ -332,6 +336,7 @@ while True:
         pygame.quit()
         if option == 2: server.stop()
         if option == 0: engine.stop()  
+        run = False
         sys.exit() 
 
     mX, mY = 0, 0

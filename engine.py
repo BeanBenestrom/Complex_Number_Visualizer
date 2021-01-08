@@ -152,6 +152,7 @@ def stop():
 
 
 def get_info():
+    global objs, cams, porsions
     return [objs, cams, porsion]
 
 

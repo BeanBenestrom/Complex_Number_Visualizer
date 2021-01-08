@@ -74,8 +74,10 @@ def sendInfo(conn, address):
             while length > 0:
                 data += conn.recv(bufferSize); length -= bufferSize
             pos, rot = pickle.loads(data)
+            # print(address)
             engine.update_user_info(address, pos, rot)
-            d = pickle.dumps([True, engine.get_info()])
+            info = engine.get_info()
+            d = pickle.dumps([True, info])
             conn.send(bytes(f"{len(d):<{headerSize}}", "utf-8") + d)
         except:
             print(red + "\nERROR: User, we are receiving data from, does not exsist, or is giving faulty data." + white)
@@ -88,7 +90,7 @@ def start():
     threading.Thread(target=engine.start).start()
     while run:
         conn, address = server.accept()
-        if maxSize <= user_amount: 
+        if maxSize <= user_amount:
             sendMessage(conn, address, "SERVER: Server is full!    Try again later.", "yellowL")
             conn.close()
         else:

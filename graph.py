@@ -321,7 +321,7 @@ def save_json():
 area = pi
 size = 1
 quality = 15
-porsion = 1000
+porsion = 10
 roundAmount = 3   # To what decimal the numbers will be rounded for the JSON file
 useErrorCube = True
 
@@ -358,7 +358,7 @@ with open("AI.json") as f:
 #iKDevX = Graph([0, 0], [1, 0, 1, 0], func=inverse_kinematic_regression_dev_XY, color=(255, 25, 25))
 # iKDevZ = Graph([0, 0], [3, 0, 3, 1], func=inverse_kinematic_regression_dev_XY, color=(25, 255, 25))
 
-# graphs.append(g4); graphs.append(g5)
+graphs.append(g4); graphs.append(g5)
 #graphs.append(g5)
 #graphs.append(g2x2y)
 #graphs.append(iKDevX)
@@ -370,7 +370,7 @@ usedLoopGraphs = []
 
 
 save_json()
-arm_movement_2D()
+# arm_movement_2D()
 # Thread(target=inverse_kinematic_func_movement).start()
 # AI_derivative_movement(lg, randint(-area*1000, area*1000)/100, randint(-area*1000, area*1000)/100, 0.1)
 # inverse_kinematic_derivative_movement(iK, randint(-int(pi*100), int(pi*100))/100, randint(-int(pi*100), int(pi*100))/100, 0.5, arm=True)
