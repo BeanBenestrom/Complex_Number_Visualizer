@@ -128,13 +128,15 @@ def new_info():
     while run:
         n = 0
         while run:
-            try: length = int(socketCon.recv(headerSize)); break
+            try: 
+                v = socketCon.recv(headerSize)
+                length = int(v); break
             except: pass
         data = bytes("", "utf-8")
         while length > 0:
             data += socketCon.recv(bufferSize); length -= bufferSize; n += bufferSize
         try:
-            d = pickle.loads(data); break
+            d = pickle.loads(data)
             if d[0]: info, cams, porsion = d[1]
             else: print(colors.get(d[2]) + d[1] + white)
         except: pass
@@ -268,8 +270,8 @@ def render():
         if i.user[0] != ip:
             x, y, z = i.pos; dot = draw_dot(x, y, z)
             if dot[0]: 
-                r = int(50 - sqrt(pow(x - pos[0], 2) + pow(y - pos[1], 2) + pow(z - pos[2], 2)))
-                if r < 1: r = 1
+                r = int(sqrt(pow(x - pos[0], 2) + pow(y - pos[1], 2) + pow(z - pos[2], 2))*zoom/0.1)
+                if r > 10000: r = 10000
                 pygame.draw.circle(screen, i.color, dot, r)
 
     pygame.display.update()
