@@ -94,16 +94,18 @@ def rotateXY(_vector, rot, rev=1):
 
 def circle_movement():
     global usedLoopGraphs
-    x = -5.3; z = 0; rot = 1/360*2*pi
+    r = -1; n = 0
     o = [0, 0]
     while True:
         time.sleep(0.01)
-        x = x*cos(rot) - z*sin(rot)
-        z = x*sin(rot) + z*cos(rot)
+        rot = 1/360*n*2*pi
+        x = r*cos(rot)
+        z = r*sin(rot)
         for i in usedLoopGraphs:
             i.pos[0] = o[0] + x
             i.pos[1] = o[1] + z
             i.graph = make_graph(i, i.func)
+        n += 1
         save_json()
 
 
@@ -318,10 +320,10 @@ def save_json():
 
 # Variables ---------------------------------------------------------------------------------------------------------------------------- #
 
-area = pi
+area = 3
 size = 1
-quality = 15
-porsion = 10
+quality = 3
+porsion = 10000
 roundAmount = 3   # To what decimal the numbers will be rounded for the JSON file
 useErrorCube = True
 
@@ -358,18 +360,21 @@ with open("AI.json") as f:
 #iKDevX = Graph([0, 0], [1, 0, 1, 0], func=inverse_kinematic_regression_dev_XY, color=(255, 25, 25))
 # iKDevZ = Graph([0, 0], [3, 0, 3, 1], func=inverse_kinematic_regression_dev_XY, color=(25, 255, 25))
 
-graphs.append(g4); graphs.append(g5)
-#graphs.append(g5)
+# graphs.append(lg)
+
+# graphs.append(g4); graphs.append(g5)
+graphs.append(g5)
 #graphs.append(g2x2y)
 #graphs.append(iKDevX)
 #graphs.append(iK); # graphs.append(iKDevZ)
-usedLoopGraphs = []
+usedLoopGraphs = [g5]
 
 #lines.append(line1); lines.append(line2); lines.append(lineAIZ); lines.append(lineAIX)
 #dots.append(dot1)
 
 
-save_json()
+circle_movement()
+# save_json()
 # arm_movement_2D()
 # Thread(target=inverse_kinematic_func_movement).start()
 # AI_derivative_movement(lg, randint(-area*1000, area*1000)/100, randint(-area*1000, area*1000)/100, 0.1)

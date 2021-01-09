@@ -65,19 +65,24 @@ def sendMessage(conn, address, msg, colorIndex):
 
 def sendInfo(conn, address): 
     global headerSize, bufferSize, info
-    while run:    
+    while run:
         try:
             length = int(conn.recv(headerSize))
             if length > maxheaderSize:
                 print(red + "\nERROR: User, we are receiving data from, has given a faulty data size." + white); remove_user(conn, address)
             data = bytes("", "utf-8")
-            while length > 0:
-                data += conn.recv(bufferSize); length -= bufferSize
+            while run:
+                if len(data)+bufferSize < length: 
+                    data += conn.recv(bufferSize)
+                else:
+                    data += conn.recv(length - len(data))
+                if len(data) >= length: break
             pos, rot = pickle.loads(data)
-            # print(address)
+            # print(len(data))
             engine.update_user_info(address, pos, rot)
             info = engine.get_info()
             d = pickle.dumps([True, info])
+            # print(f"{address} {len(info[0])} {len(d):<{headerSize}}")
             conn.send(bytes(f"{len(d):<{headerSize}}", "utf-8") + d)
         except:
             print(red + "\nERROR: User, we are receiving data from, does not exsist, or is giving faulty data." + white)
@@ -98,7 +103,7 @@ def start():
                 sendMessage(user[0], user[1], f"SERVER: User {address} joined the server!", "yellowL")
             users.append([conn, address])
             engine.add_cam(address)
-            print(greenL + f"User {address} connected!" + white)
+            print(greenL + f"\nUser {address} connected!" + white)
             sendMessage(conn, address, "Welcome to the server!", "greenL")
             threading.Thread(target=sendInfo, args=[conn, address]).start()
             user_amount += 1

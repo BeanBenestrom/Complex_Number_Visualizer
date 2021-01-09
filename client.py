@@ -18,7 +18,8 @@ w, h = 1000, 1000; fps = 120; maxArea = 1000; porsion = -1; gridArea = 21
 ip, port = socket.gethostbyname(socket.gethostname()), 55555
 maxTries = 3
 headerSize = 7
-bufferSize = 8000
+bufferSize = 100
+infoTimer = pygame.time.get_ticks()
 
 run = True
 
@@ -124,23 +125,22 @@ def server_options():
 
 
 def new_info():
-    global info, porsion, cams, loaded, bufferSize, headerSize
+    global info, porsion, cams, loaded, bufferSize, headerSize, infoTimer
     while run:
-        n = 0
-        while run:
-            try: 
-                v = socketCon.recv(headerSize)
-                length = int(v); break
-            except: pass
-        data = bytes("", "utf-8")
-        while length > 0:
-            data += socketCon.recv(bufferSize); length -= bufferSize; n += bufferSize
-        try:
-            d = pickle.loads(data)
-            if d[0]: info, cams, porsion = d[1]
-            else: print(colors.get(d[2]) + d[1] + white)
-        except: pass
         loaded = True
+        length = int(socketCon.recv(headerSize))
+        data = bytes("", "utf-8")
+        while run:
+            if len(data)+bufferSize < length:
+                data += socketCon.recv(bufferSize)
+            else: 
+                data += socketCon.recv(length - len(data))
+            if len(data) >= length: 
+                break
+        d = pickle.loads(data)
+        if d[0]: info, cams, porsion = d[1]
+        else: print(colors.get(d[2]) + d[1] + white)
+        infoTimer = pygame.time.get_ticks()
 
 
 # User functions ---------------------------------------------------------------------------------------------------------------------- #
@@ -267,10 +267,10 @@ def render():
             except: pass
 
     for i in cams:
-        if i.user[0] != ip:
+        if i.user[0] != ip and i.user[0] != socket.gethostbyname(socket.gethostname()):
             x, y, z = i.pos; dot = draw_dot(x, y, z)
             if dot[0]: 
-                r = int(sqrt(pow(x - pos[0], 2) + pow(y - pos[1], 2) + pow(z - pos[2], 2))*zoom/0.1)
+                r = int(zoom/sqrt(pow(x - pos[0], 2) + pow(y - pos[1], 2) + pow(z - pos[2], 2))*0.1)
                 if r > 10000: r = 10000
                 pygame.draw.circle(screen, i.color, dot, r)
 
@@ -354,7 +354,9 @@ while run:
 
     if option == 0: info, _, porsion = engine.get_info()
     elif loaded:
-        loaded = False
         d = pickle.dumps([pos, rot])
         socketCon.send(bytes(f"{len(d):<{headerSize}}", "utf-8") + d)
+        loaded = False
+    elif pygame.time.get_ticks() - infoTimer > 1000:
+        infoTimer = pygame.time.get_ticks(); print("EPic"); loaded = True
     rotate(mX, mY); move(key); render()
