@@ -20,6 +20,7 @@ maxTries = 3
 headerSize = 7
 bufferSize = 100
 infoTimer = pygame.time.get_ticks()
+playerSize = 0.1
 
 run = True
 
@@ -126,21 +127,23 @@ def server_options():
 
 def new_info():
     global info, porsion, cams, loaded, bufferSize, headerSize, infoTimer
-    while run:
-        loaded = True
-        length = int(socketCon.recv(headerSize))
-        data = bytes("", "utf-8")
+    try:
         while run:
-            if len(data)+bufferSize < length:
-                data += socketCon.recv(bufferSize)
-            else: 
-                data += socketCon.recv(length - len(data))
-            if len(data) >= length: 
-                break
-        d = pickle.loads(data)
-        if d[0]: info, cams, porsion = d[1]
-        else: print(colors.get(d[2]) + d[1] + white)
-        infoTimer = pygame.time.get_ticks()
+            loaded = True
+            length = int(socketCon.recv(headerSize))
+            data = bytes("", "utf-8")
+            while run:
+                if len(data)+bufferSize < length:
+                    data += socketCon.recv(bufferSize)
+                else: 
+                    data += socketCon.recv(length - len(data))
+                if len(data) >= length: 
+                    break
+            d = pickle.loads(data)
+            if d[0]: info, cams, porsion = d[1]
+            else: print(colors.get(d[2]) + d[1] + white)
+            infoTimer = pygame.time.get_ticks()
+    except: pass
 
 
 # User functions ---------------------------------------------------------------------------------------------------------------------- #
@@ -156,26 +159,32 @@ def move(key):
     temp_vel = vel
     if key[pygame.K_LSHIFT]: temp_vel *= 5
     if key[pygame.K_LCTRL]: temp_vel /= 5
-    if key[pygame.K_w]: dirPos += rotateXZ(rotateYZ([0, 0, temp_vel], -1), -1)
-    if key[pygame.K_a]: dirPos += rotateXZ([-temp_vel, 0, 0], -1)
-    if key[pygame.K_s]: dirPos += rotateXZ(rotateYZ([0, 0, -temp_vel], -1), -1)
-    if key[pygame.K_d]: dirPos += rotateXZ([temp_vel, 0, 0], -1)
+    if key[pygame.K_w]: dirPos += rotateXZ(rotateYZ([0, 0, temp_vel], rot[1], -1), rot[0], -1)
+    if key[pygame.K_a]: dirPos += rotateXZ([-temp_vel, 0, 0], rot[0], -1)
+    if key[pygame.K_s]: dirPos += rotateXZ(rotateYZ([0, 0, -temp_vel], rot[1], -1), rot[0], -1)
+    if key[pygame.K_d]: dirPos += rotateXZ([temp_vel, 0, 0], rot[0], -1)
+    if key[pygame.K_1] and playerSize - 0.1 > 0: playerSize -= 0.1
+    if key[pygame.K_2]: playerSize += 0.1
 
     pos += dirPos
 
 
+def _exit():
+    global run
+    run = False
+    pygame.quit()
+    sys.exit()
+
 # Rotate functions -------------------------------------------------------------------------------------------------------------------- #
 
-def rotateXZ(_vector, rev=1):
-    global rot
-    x, y, z = _vector; _rot = rot[0]*rev
-    return (x*cos(_rot) - z*sin(_rot), y, x*sin(_rot) + z*cos(_rot))
+def rotateXZ(_vector, rot, rev=1):
+    x, y, z = _vector; _rot = rot*rev
+    return np.array([x*cos(_rot) - z*sin(_rot), y, x*sin(_rot) + z*cos(_rot)])
 
 
-def rotateYZ(_vector, rev=1):
-    global rot
-    x, y, z = _vector; _rot = -rot[1]*rev
-    return (x, z*sin(_rot) + y*cos(_rot), z*cos(_rot) - y*sin(_rot))
+def rotateYZ(_vector, rot, rev=1):
+    x, y, z = _vector; _rot = -rot*rev
+    return np.array([x, z*sin(_rot) + y*cos(_rot), z*cos(_rot) - y*sin(_rot)])
 
 
 # Functions -------------------------------------------------------------------------------------------------------------------------- #
@@ -201,7 +210,7 @@ def draw_dot(x, y, z):
     x -= pos[0]; y -= pos[1]; z -= pos[2]
 
     try:
-        x, y, z = rotateYZ(rotateXZ([x, y, z]))
+        x, y, z = rotateYZ(rotateXZ([x, y, z], rot[0]), rot[1])
         x, y = int(zoom/z*x)+cx, int(zoom/z*y)+cy
 
         if z > 0.01 and -100000 < x < 100000 and -100000 < y < 100000:
@@ -269,10 +278,21 @@ def render():
     for i in cams:
         if i.user[0] != ip and i.user[0] != socket.gethostbyname(socket.gethostname()):
             x, y, z = i.pos; dot = draw_dot(x, y, z)
-            if dot[0]: 
-                r = int(zoom/sqrt(pow(x - pos[0], 2) + pow(y - pos[1], 2) + pow(z - pos[2], 2))*0.1)
-                if r > 10000: r = 10000
-                pygame.draw.circle(screen, i.color, dot, r)
+            if dot[0]:
+                l1 = rotateXZ(rotateYZ([0, 0, playerSize], i.rot[1], -1), i.rot[0], -1) + i.pos
+                l2 = rotateXZ(rotateYZ([0, 0, playerSize*1.8], i.rot[1], -1), i.rot[0], -1) + i.pos
+
+                l1 = draw_dot(l1[0], l1[1], l1[2])
+                l2 = draw_dot(l2[0], l2[1], l2[2])
+
+                # test = draw_dot(x+playerSize, y, z)
+
+                r = abs(int(zoom/rotateYZ(rotateXZ([x-pos[0], y-pos[1], z-pos[2]], rot[0]), rot[1])[2]*playerSize))
+                try:
+                    pygame.draw.circle(screen, i.color, dot, r)
+                    pygame.draw.line(screen, (i.color[0]-50, i.color[1]-50, i.color[2]-50), l1, l2, 4)
+                    # pygame.draw.circle(screen, (255, 0, 0), test, 2)
+                except: pass
 
     pygame.display.update()
 
@@ -285,7 +305,7 @@ while True:
         option = int(input(">")) - 1
 
         if option == 0:
-            threading.Thread(target=engine.start).start(); break
+            threading.Thread(target=engine.start).start();  break
         elif option == 1:
             if server_options(): break
         else:
@@ -317,11 +337,9 @@ while run:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
             if option == 2: server.stop()
             if option == 0: engine.stop()
-            run = False
-            sys.exit()
+            _exit()
 
         if event.type == pygame.VIDEORESIZE:
             pass
@@ -335,11 +353,9 @@ while run:
         # if event.type == pygame.MOUSEMOTION:
 
     if key[pygame.K_ESCAPE]:
-        pygame.quit()
         if option == 2: server.stop()
         if option == 0: engine.stop()  
-        run = False
-        sys.exit() 
+        _exit()
 
     mX, mY = 0, 0
     if mouse[2]:
@@ -354,9 +370,14 @@ while run:
 
     if option == 0: info, _, porsion = engine.get_info()
     elif loaded:
-        d = pickle.dumps([pos, rot])
-        socketCon.send(bytes(f"{len(d):<{headerSize}}", "utf-8") + d)
-        loaded = False
+        try:
+            d = pickle.dumps([pos, rot])
+            socketCon.send(bytes(f"{len(d):<{headerSize}}", "utf-8") + d)
+            loaded = False
+        except: 
+            print(yellow + "\n You were disconnected from the server." + white)
+            input(">")
+            _exit()
     elif pygame.time.get_ticks() - infoTimer > 1000:
-        infoTimer = pygame.time.get_ticks(); print("EPic"); loaded = True
+        infoTimer = pygame.time.get_ticks(); loaded = True; #print("EPic")
     rotate(mX, mY); move(key); render()

@@ -65,11 +65,12 @@ def sendMessage(conn, address, msg, colorIndex):
 
 def sendInfo(conn, address): 
     global headerSize, bufferSize, info
-    while run:
-        try:
+    try:
+        while run:
             length = int(conn.recv(headerSize))
             if length > maxheaderSize:
-                print(red + "\nERROR: User, we are receiving data from, has given a faulty data size." + white); remove_user(conn, address)
+                print(red + "\nERROR: User, we are receiving data from, has given a faulty data size." + white)
+                remove_user(conn, address); returns
             data = bytes("", "utf-8")
             while run:
                 if len(data)+bufferSize < length: 
@@ -84,10 +85,10 @@ def sendInfo(conn, address):
             d = pickle.dumps([True, info])
             # print(f"{address} {len(info[0])} {len(d):<{headerSize}}")
             conn.send(bytes(f"{len(d):<{headerSize}}", "utf-8") + d)
-        except:
-            print(red + "\nERROR: User, we are receiving data from, does not exsist, or is giving faulty data." + white)
-            remove_user(conn, address)
-            return 
+    except:
+        print(red + "\nERROR: User, we are receiving data from, does not exsist, or is giving faulty data." + white)
+        remove_user(conn, address)
+        return 
 
 
 def start():

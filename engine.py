@@ -16,7 +16,7 @@ class Cam:
         self.user = user
         self.pos = [0, 0, 0]
         self.rot = [0, 0]
-        self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        self.color = (random.randint(55, 255), random.randint(55, 255), random.randint(55, 255))
 
 
 class Object:

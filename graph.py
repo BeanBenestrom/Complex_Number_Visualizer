@@ -363,19 +363,19 @@ with open("AI.json") as f:
 # graphs.append(lg)
 
 # graphs.append(g4); graphs.append(g5)
-graphs.append(g5)
+#graphs.append(g5)
 #graphs.append(g2x2y)
 #graphs.append(iKDevX)
 #graphs.append(iK); # graphs.append(iKDevZ)
-usedLoopGraphs = [g5]
+usedLoopGraphs = []
 
 #lines.append(line1); lines.append(line2); lines.append(lineAIZ); lines.append(lineAIX)
 #dots.append(dot1)
 
 
-circle_movement()
+# circle_movement()
 # save_json()
-# arm_movement_2D()
+arm_movement_2D()
 # Thread(target=inverse_kinematic_func_movement).start()
 # AI_derivative_movement(lg, randint(-area*1000, area*1000)/100, randint(-area*1000, area*1000)/100, 0.1)
 # inverse_kinematic_derivative_movement(iK, randint(-int(pi*100), int(pi*100))/100, randint(-int(pi*100), int(pi*100))/100, 0.5, arm=True)
